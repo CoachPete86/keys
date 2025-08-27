@@ -5,7 +5,8 @@ import { Textarea } from './ui/textarea'
 import { Label } from './ui/label'
 import { Progress } from './ui/progress'
 import { Badge } from './ui/badge'
-import { Play, Save, ArrowRight } from '@phosphor-icons/react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
+import { Play, Save, ArrowRight, CaretDown, CaretRight } from '@phosphor-icons/react'
 import { BusinessInput, AnalysisData } from '../App'
 import { toast } from 'sonner'
 
@@ -36,20 +37,28 @@ export function BusinessInputForm({
   const [isProcessing, setIsProcessing] = useState(false)
   const [processingStage, setProcessingStage] = useState<'stage1' | 'stage2' | null>(null)
   const [progress, setProgress] = useState(0)
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   const saveProject = () => {
-    if (!formData.name.trim()) {
-      toast.error('Project name is required')
+    if (!formData.name.trim() && !formData.purpose.trim()) {
+      toast.error('Please provide either a project name or describe the purpose')
       return
     }
 
+    // Auto-generate name from purpose if not provided
+    const projectName = formData.name.trim() || 
+      (formData.purpose.trim() ? 
+        formData.purpose.substring(0, 50) + (formData.purpose.length > 50 ? '...' : '') :
+        `Project ${Date.now()}`
+      )
+
     const projectData: BusinessInput = {
       id: project?.id || `project-${Date.now()}`,
-      name: formData.name,
+      name: projectName,
       purpose: formData.purpose,
       users: formData.users,
       metrics: formData.metrics,
@@ -65,9 +74,14 @@ export function BusinessInputForm({
   }
 
   const runStage1Analysis = async () => {
-    if (!project) {
-      toast.error('Please save the project first')
+    if (!formData.purpose.trim()) {
+      toast.error('Please describe your purpose before running analysis')
       return
+    }
+
+    // Auto-save if needed
+    if (!project) {
+      saveProject()
     }
 
     setIsProcessing(true)
@@ -83,13 +97,13 @@ export function BusinessInputForm({
 You are an enterprise-grade Business Analyst & Capability Architect following the KRCM methodology. Generate a Stage 1 focused scoping analysis for this business idea:
 
 Business Input:
-- Name: ${formData.name}
+- Name: ${formData.name || 'Analysis Project'}
 - Purpose: ${formData.purpose}
-- Target Users: ${formData.users}
-- Success Metrics: ${formData.metrics}
-- Constraints: ${formData.constraints}
-- Known Systems: ${formData.systems}
-- Risks: ${formData.risks}
+- Target Users: ${formData.users || 'To be determined'}
+- Success Metrics: ${formData.metrics || 'To be defined'}
+- Constraints: ${formData.constraints || 'None specified'}
+- Known Systems: ${formData.systems || 'None specified'}
+- Risks: ${formData.risks || 'None identified'}
 
 Follow the exact KRCM Stage 1 format with:
 A) Executive Snapshot
@@ -109,7 +123,8 @@ Use UK English, MoSCoW prioritisation, and the exact wording standards specified
       clearInterval(progressInterval)
       setProgress(100)
 
-      onUpdateAnalysis(project.id, {
+      const projectId = project?.id || `project-${Date.now()}`
+      onUpdateAnalysis(projectId, {
         stage1: result,
         status: 'stage1-complete'
       })
@@ -118,7 +133,8 @@ Use UK English, MoSCoW prioritisation, and the exact wording standards specified
       onSwitchToResults()
     } catch (error) {
       toast.error('Analysis failed. Please try again.')
-      onUpdateAnalysis(project.id, {
+      const projectId = project?.id || `project-${Date.now()}`
+      onUpdateAnalysis(projectId, {
         status: 'error'
       })
     } finally {
@@ -180,7 +196,7 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
     }
   }
 
-  const canRunStage1 = project && !isProcessing
+  const canRunStage1 = (formData.purpose.trim() || project) && !isProcessing
   const canRunStage2 = analysis?.status === 'stage1-complete' && !isProcessing
 
   return (
@@ -188,7 +204,7 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-foreground">Business Analysis Input</h2>
-          <p className="text-muted-foreground">Define your business requirements for KRCM analysis</p>
+          <p className="text-muted-foreground">Describe your business idea or need for analysis</p>
         </div>
         {analysis && (
           <div className="flex items-center gap-2">
@@ -202,94 +218,121 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
         )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="name">Idea/Variable Name *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="Enter business idea name"
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="purpose">One-sentence Purpose</Label>
-            <Textarea
-              id="purpose"
-              value={formData.purpose}
-              onChange={(e) => handleInputChange('purpose', e.target.value)}
-              placeholder="Describe the core purpose in one sentence"
-              className="mt-1"
-              rows={2}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="users">Target Users/Beneficiaries</Label>
-            <Textarea
-              id="users"
-              value={formData.users}
-              onChange={(e) => handleInputChange('users', e.target.value)}
-              placeholder="Who will use or benefit from this solution?"
-              className="mt-1"
-              rows={2}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="metrics">Success Metrics (3-5)</Label>
-            <Textarea
-              id="metrics"
-              value={formData.metrics}
-              onChange={(e) => handleInputChange('metrics', e.target.value)}
-              placeholder="How will success be measured?"
-              className="mt-1"
-              rows={3}
-            />
-          </div>
+      {/* Main Purpose Input - Prominently Featured */}
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="purpose" className="text-lg font-medium">
+            What do you need unboxed? Describe your purpose or business idea.
+          </Label>
+          <Textarea
+            id="purpose"
+            value={formData.purpose}
+            onChange={(e) => handleInputChange('purpose', e.target.value)}
+            placeholder="e.g., Create a system to manage customer feedback and turn it into actionable insights for product teams..."
+            className="mt-2 min-h-[120px] text-base"
+            rows={5}
+          />
+          <p className="text-sm text-muted-foreground mt-1">
+            This is the core input for analysis. Be as detailed as you like about what you're trying to achieve.
+          </p>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="constraints">Constraints</Label>
-            <Textarea
-              id="constraints"
-              value={formData.constraints}
-              onChange={(e) => handleInputChange('constraints', e.target.value)}
-              placeholder="Budget, timeline, regulatory constraints"
-              className="mt-1"
-              rows={2}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="systems">Known Systems/Data Sources</Label>
-            <Textarea
-              id="systems"
-              value={formData.systems}
-              onChange={(e) => handleInputChange('systems', e.target.value)}
-              placeholder="Existing systems or data sources to integrate"
-              className="mt-1"
-              rows={3}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="risks">Notable Risks/Sensitivities</Label>
-            <Textarea
-              id="risks"
-              value={formData.risks}
-              onChange={(e) => handleInputChange('risks', e.target.value)}
-              placeholder="Key risks or sensitive areas to consider"
-              className="mt-1"
-              rows={3}
-            />
-          </div>
+        {/* Project Name - Optional, smaller */}
+        <div>
+          <Label htmlFor="name" className="text-sm">
+            Project Name <span className="text-muted-foreground">(optional - will auto-generate if left blank)</span>
+          </Label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+            placeholder="Enter a name for this project"
+            className="mt-1"
+          />
         </div>
       </div>
+
+      {/* Advanced Details - Collapsible */}
+      <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+        <CollapsibleTrigger asChild>
+          <Button 
+            variant="ghost" 
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground p-0 h-auto"
+          >
+            {showAdvanced ? <CaretDown className="h-4 w-4" /> : <CaretRight className="h-4 w-4" />}
+            Advanced Details
+            <span className="text-xs bg-muted px-2 py-1 rounded">Optional</span>
+          </Button>
+        </CollapsibleTrigger>
+        
+        <CollapsibleContent className="space-y-6 pt-4">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="users">Target Users/Beneficiaries</Label>
+                <Textarea
+                  id="users"
+                  value={formData.users}
+                  onChange={(e) => handleInputChange('users', e.target.value)}
+                  placeholder="Who will use or benefit from this solution?"
+                  className="mt-1"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="metrics">Success Metrics (3-5)</Label>
+                <Textarea
+                  id="metrics"
+                  value={formData.metrics}
+                  onChange={(e) => handleInputChange('metrics', e.target.value)}
+                  placeholder="How will success be measured?"
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="constraints">Constraints</Label>
+                <Textarea
+                  id="constraints"
+                  value={formData.constraints}
+                  onChange={(e) => handleInputChange('constraints', e.target.value)}
+                  placeholder="Budget, timeline, regulatory constraints"
+                  className="mt-1"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="systems">Known Systems/Data Sources</Label>
+                <Textarea
+                  id="systems"
+                  value={formData.systems}
+                  onChange={(e) => handleInputChange('systems', e.target.value)}
+                  placeholder="Existing systems or data sources to integrate"
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="risks">Notable Risks/Sensitivities</Label>
+                <Textarea
+                  id="risks"
+                  value={formData.risks}
+                  onChange={(e) => handleInputChange('risks', e.target.value)}
+                  placeholder="Key risks or sensitive areas to consider"
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {isProcessing && (
         <div className="space-y-2 p-4 bg-muted rounded-lg">
