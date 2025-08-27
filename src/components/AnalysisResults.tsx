@@ -4,8 +4,9 @@ import { Card } from './ui/card'
 import { Badge } from './ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { ScrollArea } from './ui/scroll-area'
-import { Download, FileText, Copy, ArrowRight } from '@phosphor-icons/react'
+import { Download, FileText, Copy, ArrowRight, Eye } from '@phosphor-icons/react'
 import { BusinessInput, AnalysisData } from '../App'
+import { AnalysisViewer } from './AnalysisViewer'
 import { toast } from 'sonner'
 
 interface AnalysisResultsProps {
@@ -16,6 +17,7 @@ interface AnalysisResultsProps {
 
 export function AnalysisResults({ project, analysis, onUpdateAnalysis }: AnalysisResultsProps) {
   const [activeTab, setActiveTab] = useState('stage1')
+  const [viewMode, setViewMode] = useState<'formatted' | 'raw'>('formatted')
   const [isProcessingStage2, setIsProcessingStage2] = useState(false)
 
   const runStage2Expansion = async () => {
@@ -146,85 +148,150 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
             </TabsTrigger>
           </TabsList>
 
-          {!analysis.stage2 && analysis.stage1 && (
-            <Button
-              onClick={runStage2Expansion}
-              disabled={isProcessingStage2}
-              className="flex items-center gap-2"
-            >
-              <ArrowRight className="h-4 w-4" />
-              {isProcessingStage2 ? 'Expanding...' : 'Expand to Stage 2'}
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {(analysis.stage1 || analysis.stage2) && (
+              <div className="flex items-center gap-1 border rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'formatted' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('formatted')}
+                  className="h-7 px-3 text-xs"
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  Formatted
+                </Button>
+                <Button
+                  variant={viewMode === 'raw' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('raw')}
+                  className="h-7 px-3 text-xs"
+                >
+                  <FileText className="h-3 w-3 mr-1" />
+                  Raw
+                </Button>
+              </div>
+            )}
+            
+            {!analysis.stage2 && analysis.stage1 && (
+              <Button
+                onClick={runStage2Expansion}
+                disabled={isProcessingStage2}
+                className="flex items-center gap-2"
+              >
+                <ArrowRight className="h-4 w-4" />
+                {isProcessingStage2 ? 'Expanding...' : 'Expand to Stage 2'}
+              </Button>
+            )}
+          </div>
         </div>
 
         <TabsContent value="stage1" className="mt-6">
           {analysis.stage1 && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Stage 1 Analysis Output</h3>
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => copyToClipboard(analysis.stage1!)}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Copy className="h-4 w-4" />
-                    Copy
-                  </Button>
-                  <Button
-                    onClick={() => downloadAsMarkdown(analysis.stage1!, `${project.name}-stage1`)}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download
-                  </Button>
-                </div>
-              </div>
-              <ScrollArea className="h-[600px] w-full rounded border p-4">
-                <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
-                  {analysis.stage1}
-                </pre>
-              </ScrollArea>
-            </Card>
+            <>
+              {viewMode === 'formatted' ? (
+                <AnalysisViewer
+                  project={project}
+                  analysis={analysis}
+                  content={analysis.stage1}
+                  stage="stage1"
+                />
+              ) : (
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Stage 1 Analysis Output (Raw)</h3>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => setViewMode('formatted')}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Formatted View
+                      </Button>
+                      <Button
+                        onClick={() => copyToClipboard(analysis.stage1!)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Copy className="h-4 w-4" />
+                        Copy
+                      </Button>
+                      <Button
+                        onClick={() => downloadAsMarkdown(analysis.stage1!, `${project.name}-stage1`)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download
+                      </Button>
+                    </div>
+                  </div>
+                  <ScrollArea className="h-[600px] w-full rounded border p-4">
+                    <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
+                      {analysis.stage1}
+                    </pre>
+                  </ScrollArea>
+                </Card>
+              )}
+            </>
           )}
         </TabsContent>
 
         <TabsContent value="stage2" className="mt-6">
           {analysis.stage2 && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Stage 2 Expansion Output</h3>
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => copyToClipboard(analysis.stage2!)}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Copy className="h-4 w-4" />
-                    Copy
-                  </Button>
-                  <Button
-                    onClick={() => downloadAsMarkdown(analysis.stage2!, `${project.name}-stage2`)}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download
-                  </Button>
-                </div>
-              </div>
-              <ScrollArea className="h-[600px] w-full rounded border p-4">
-                <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
-                  {analysis.stage2}
-                </pre>
-              </ScrollArea>
-            </Card>
+            <>
+              {viewMode === 'formatted' ? (
+                <AnalysisViewer
+                  project={project}
+                  analysis={analysis}
+                  content={analysis.stage2}
+                  stage="stage2"
+                />
+              ) : (
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Stage 2 Expansion Output (Raw)</h3>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => setViewMode('formatted')}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Formatted View
+                      </Button>
+                      <Button
+                        onClick={() => copyToClipboard(analysis.stage2!)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Copy className="h-4 w-4" />
+                        Copy
+                      </Button>
+                      <Button
+                        onClick={() => downloadAsMarkdown(analysis.stage2!, `${project.name}-stage2`)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download
+                      </Button>
+                    </div>
+                  </div>
+                  <ScrollArea className="h-[600px] w-full rounded border p-4">
+                    <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
+                      {analysis.stage2}
+                    </pre>
+                  </ScrollArea>
+                </Card>
+              )}
+            </>
           )}
         </TabsContent>
       </Tabs>
