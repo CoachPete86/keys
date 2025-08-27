@@ -6,7 +6,7 @@ import { Label } from './ui/label'
 import { Progress } from './ui/progress'
 import { Badge } from './ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
-import { Play, Save, ArrowRight, CaretDown, CaretRight } from '@phosphor-icons/react'
+import { Play, Save, ArrowRight, CaretDown, CaretRight, Lightbulb } from '@phosphor-icons/react'
 import { BusinessInput, AnalysisData } from '../App'
 import { toast } from 'sonner'
 
@@ -38,6 +38,19 @@ export function BusinessInputForm({
   const [processingStage, setProcessingStage] = useState<'stage1' | 'stage2' | null>(null)
   const [progress, setProgress] = useState(0)
   const [showAdvanced, setShowAdvanced] = useState(false)
+
+  const loadExampleData = () => {
+    setFormData({
+      name: 'Customer Feedback Management System',
+      purpose: 'Create a comprehensive system to collect, analyse, and transform customer feedback into actionable insights for product development teams. The solution should capture feedback from multiple channels (web forms, social media, support tickets, surveys), use AI to categorise and prioritise feedback, and provide real-time dashboards for product managers to track trends and make data-driven decisions.',
+      users: 'Product managers, customer support teams, development teams, and executive leadership who need insights into customer sentiment and product improvement opportunities.',
+      metrics: '• Increase customer satisfaction scores by 25% within 6 months\n• Reduce feedback processing time from 5 days to 2 hours\n• Achieve 90% feedback categorisation accuracy\n• Enable 80% of product decisions to be backed by customer data\n• Reduce customer churn by 15% through proactive issue resolution',
+      constraints: 'Budget: £150,000 over 12 months\nTimeline: MVP delivery within 4 months\nCompliance: Must meet GDPR requirements\nIntegration: Must work with existing Salesforce and Jira systems',
+      systems: 'Salesforce CRM, Jira for issue tracking, existing company website, social media APIs (Twitter, Facebook), customer support portal, existing SQL Server database for customer data',
+      risks: 'Data privacy concerns with customer feedback storage, potential AI bias in categorisation, integration complexity with legacy systems, user adoption challenges, scalability issues with high-volume feedback periods'
+    })
+    toast.success('Example data loaded - try running Stage 1 Analysis!')
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -206,17 +219,53 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
           <h2 className="text-2xl font-semibold text-foreground">Business Analysis Input</h2>
           <p className="text-muted-foreground">Describe your business idea or need for analysis</p>
         </div>
-        {analysis && (
-          <div className="flex items-center gap-2">
-            {analysis.status === 'stage1-complete' && (
-              <Badge variant="secondary">Stage 1 Complete</Badge>
-            )}
-            {analysis.status === 'stage2-complete' && (
-              <Badge className="bg-accent text-accent-foreground">Stage 2 Complete</Badge>
-            )}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {analysis && (
+            <>
+              {analysis.status === 'stage1-complete' && (
+                <Badge variant="secondary">Stage 1 Complete</Badge>
+              )}
+              {analysis.status === 'stage2-complete' && (
+                <Badge className="bg-accent text-accent-foreground">Stage 2 Complete</Badge>
+              )}
+            </>
+          )}
+          <Button 
+            onClick={loadExampleData} 
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Lightbulb className="h-4 w-4" />
+            Try Example
+          </Button>
+        </div>
       </div>
+
+      {/* Help Section */}
+      {!formData.purpose && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-medium text-blue-900 mb-1">
+                Try entering a simple business idea to see the streamlined interface in action
+              </h3>
+              <p className="text-xs text-blue-700 mb-3">
+                This tool helps you unbox any business idea into structured requirements and capabilities using enterprise-grade KRCM methodology.
+              </p>
+              <Button 
+                onClick={loadExampleData} 
+                size="sm" 
+                variant="outline" 
+                className="border-blue-300 text-blue-700 hover:bg-blue-100"
+              >
+                Load Example: Customer Feedback System
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Purpose Input - Prominently Featured */}
       <div className="space-y-4">

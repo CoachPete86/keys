@@ -26,6 +26,7 @@ import {
 } from '@phosphor-icons/react'
 import { BusinessInput, AnalysisData } from '../App'
 import { AnalysisCharts } from './AnalysisCharts'
+import { VisualMappingSystem } from './VisualMappingSystem'
 import { toast } from 'sonner'
 
 interface AnalysisViewerProps {
@@ -70,6 +71,7 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
     const sectionPatterns = [
       { id: 'executive', title: 'Executive Snapshot', type: 'executive' as const, icon: Target },
       { id: 'charts', title: 'Analysis Charts', type: 'requirements' as const, icon: ChartBar },
+      { id: 'mapping', title: 'Visual Mapping', type: 'requirements' as const, icon: TreeStructure },
       { id: 'decomposition', title: 'Decomposition', type: 'requirements' as const, icon: TreeStructure },
       { id: 'requirements', title: 'Requirements Register', type: 'requirements' as const, icon: FileText },
       { id: 'capabilities', title: 'Capability Map', type: 'capabilities' as const, icon: Layers },
@@ -82,12 +84,12 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
     ]
 
     sectionPatterns.forEach(pattern => {
-      // Always add charts section (it's computed, not parsed)
-      if (pattern.id === 'charts') {
+      // Always add charts and mapping sections (they're computed, not parsed)
+      if (pattern.id === 'charts' || pattern.id === 'mapping') {
         sections.push({
           id: pattern.id,
           title: pattern.title,
-          content: '', // Charts are rendered programmatically
+          content: '', // Charts and mapping are rendered programmatically
           type: pattern.type,
           icon: pattern.icon
         })
@@ -490,9 +492,18 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
                 stage={stage}
               />
             )}
+            {activeSection === 'mapping' && (
+              <VisualMappingSystem
+                project={project}
+                analysis={analysis}
+                requirements={requirements}
+                capabilities={capabilities}
+                stage={stage}
+              />
+            )}
             {activeSection === 'requirements' && renderRequirements()}
             {activeSection === 'capabilities' && renderCapabilities()}
-            {!['executive', 'charts', 'requirements', 'capabilities'].includes(activeSection) && 
+            {!['executive', 'charts', 'mapping', 'requirements', 'capabilities'].includes(activeSection) && 
               renderGenericSection(activeSection_data)}
           </div>
         )}
