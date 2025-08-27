@@ -27,6 +27,8 @@ import {
 import { BusinessInput, AnalysisData } from '../App'
 import { AnalysisCharts } from './AnalysisCharts'
 import { VisualMappingSystem } from './VisualMappingSystem'
+import { RiskAssessment, RiskItem } from './RiskAssessment'
+import { useKV } from '@github/spark/hooks'
 import { toast } from 'sonner'
 
 interface AnalysisViewerProps {
@@ -40,7 +42,7 @@ interface ParsedSection {
   id: string
   title: string
   content: string
-  type: 'executive' | 'requirements' | 'capabilities' | 'matrix' | 'nfr' | 'roadmap' | 'diagrams' | 'json' | 'assumptions'
+  type: 'executive' | 'requirements' | 'capabilities' | 'matrix' | 'nfr' | 'roadmap' | 'diagrams' | 'json' | 'assumptions' | 'risks'
   icon: React.ComponentType<any>
 }
 
@@ -63,6 +65,101 @@ interface Capability {
 
 export function AnalysisViewer({ project, analysis, content, stage }: AnalysisViewerProps) {
   const [activeSection, setActiveSection] = useState('charts')
+  const [projectRisks, setProjectRisks] = useKV<RiskItem[]>(`risks-${project.id}`, [])
+
+  // Extract risks from analysis content
+  const extractedRisks = useMemo(() => {
+    const risks: RiskItem[] = []
+    
+    // Parse risks from content
+    const riskPatterns = [
+      /risk[s]?\s*[:\-]\s*([^.\n]+)/gi,
+      /constraint[s]?\s*[:\-]\s*([^.\n]+)/gi,
+      /challenge[s]?\s*[:\-]\s*([^.\n]+)/gi,
+      /limitation[s]?\s*[:\-]\s*([^.\n]+)/gi
+    ]
+
+    riskPatterns.forEach((pattern, index) => {
+      const matches = content.matchAll(pattern)
+      for (const match of matches) {
+        const riskText = match[1]?.trim()
+        if (riskText && riskText.length > 10) {
+          risks.push({
+            id: `extracted-${index}-${risks.length}`,
+            name: riskText.substring(0, 100) + (riskText.length > 100 ? '...' : ''),
+            description: riskText,
+            category: index === 0 ? 'technical' : index === 1 ? 'business' : index === 2 ? 'operational' : 'strategic',
+            probability: 3,
+            impact: 3,
+            currentMitigation: '',
+            proposedActions: [],
+            owner: '',
+            dueDate: '',
+            status: 'open' as const
+          })
+        }
+      }
+    })
+
+    // Parse specific business constraints
+    if (project.constraints) {
+      const constraintRisks = project.constraints.split(/[,;]/).map((constraint, index) => {
+        const trimmed = constraint.trim()
+        if (trimmed.length > 5) {
+          return {
+            id: `constraint-${index}`,
+            name: `Constraint: ${trimmed.substring(0, 80)}`,
+            description: trimmed,
+            category: 'business' as const,
+            probability: 4,
+            impact: 3,
+            currentMitigation: '',
+            proposedActions: [],
+            owner: '',
+            dueDate: '',
+            status: 'open' as const
+          }
+        }
+        return null
+      }).filter(Boolean) as RiskItem[]
+      
+      risks.push(...constraintRisks)
+    }
+
+    // Parse identified business risks
+    if (project.risks) {
+      const businessRisks = project.risks.split(/[,;]/).map((risk, index) => {
+        const trimmed = risk.trim()
+        if (trimmed.length > 5) {
+          return {
+            id: `business-risk-${index}`,
+            name: trimmed.substring(0, 80) + (trimmed.length > 80 ? '...' : ''),
+            description: trimmed,
+            category: 'business' as const,
+            probability: 3,
+            impact: 4,
+            currentMitigation: '',
+            proposedActions: [],
+            owner: '',
+            dueDate: '',
+            status: 'open' as const
+          }
+        }
+        return null
+      }).filter(Boolean) as RiskItem[]
+      
+      risks.push(...businessRisks)
+    }
+
+    return risks
+  }, [content, project.constraints, project.risks])
+
+  // Merge extracted risks with user-defined risks
+  const allRisks = useMemo(() => {
+    const userRiskIds = new Set(projectRisks.map(r => r.id))
+    const newExtractedRisks = extractedRisks.filter(r => !userRiskIds.has(r.id))
+    return [...projectRisks, ...newExtractedRisks]
+  }, [projectRisks, extractedRisks])
 
   const parsedSections = useMemo((): ParsedSection[] => {
     const sections: ParsedSection[] = []
@@ -72,6 +169,7 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
       { id: 'executive', title: 'Executive Snapshot', type: 'executive' as const, icon: Target },
       { id: 'charts', title: 'Analysis Charts', type: 'requirements' as const, icon: ChartBar },
       { id: 'mapping', title: 'Visual Mapping', type: 'requirements' as const, icon: TreeStructure },
+      { id: 'risks', title: 'Risk Assessment', type: 'risks' as const, icon: AlertTriangle },
       { id: 'decomposition', title: 'Decomposition', type: 'requirements' as const, icon: TreeStructure },
       { id: 'requirements', title: 'Requirements Register', type: 'requirements' as const, icon: FileText },
       { id: 'capabilities', title: 'Capability Map', type: 'capabilities' as const, icon: Layers },
@@ -84,8 +182,8 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
     ]
 
     sectionPatterns.forEach(pattern => {
-      // Always add charts and mapping sections (they're computed, not parsed)
-      if (pattern.id === 'charts' || pattern.id === 'mapping') {
+      // Always add charts, mapping, and risks sections (they're computed, not parsed)
+      if (pattern.id === 'charts' || pattern.id === 'mapping' || pattern.id === 'risks') {
         sections.push({
           id: pattern.id,
           title: pattern.title,
@@ -501,9 +599,20 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
                 stage={stage}
               />
             )}
+            {activeSection === 'risks' && (
+              <RiskAssessment
+                projectId={project.id}
+                initialRisks={allRisks}
+                onRisksUpdate={(risks) => {
+                  // Only save user-created/modified risks, not extracted ones
+                  const userRisks = risks.filter(r => !r.id.startsWith('extracted-') && !r.id.startsWith('constraint-') && !r.id.startsWith('business-risk-'))
+                  setProjectRisks(userRisks)
+                }}
+              />
+            )}
             {activeSection === 'requirements' && renderRequirements()}
             {activeSection === 'capabilities' && renderCapabilities()}
-            {!['executive', 'charts', 'mapping', 'requirements', 'capabilities'].includes(activeSection) && 
+            {!['executive', 'charts', 'mapping', 'risks', 'requirements', 'capabilities'].includes(activeSection) && 
               renderGenericSection(activeSection_data)}
           </div>
         )}

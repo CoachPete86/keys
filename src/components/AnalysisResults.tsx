@@ -4,9 +4,11 @@ import { Card } from './ui/card'
 import { Badge } from './ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { ScrollArea } from './ui/scroll-area'
-import { Download, FileText, Copy, ArrowRight, Eye } from '@phosphor-icons/react'
+import { Download, FileText, Copy, ArrowRight, Eye, AlertTriangle } from '@phosphor-icons/react'
 import { BusinessInput, AnalysisData } from '../App'
 import { AnalysisViewer } from './AnalysisViewer'
+import { RiskAssessment, RiskItem } from './RiskAssessment'
+import { useKV } from '@github/spark/hooks'
 import { toast } from 'sonner'
 
 interface AnalysisResultsProps {
@@ -19,6 +21,7 @@ export function AnalysisResults({ project, analysis, onUpdateAnalysis }: Analysi
   const [activeTab, setActiveTab] = useState('stage1')
   const [viewMode, setViewMode] = useState<'formatted' | 'raw'>('formatted')
   const [isProcessingStage2, setIsProcessingStage2] = useState(false)
+  const [projectRisks, setProjectRisks] = useKV<RiskItem[]>(`risks-${project.id}`, [])
 
   const runStage2Expansion = async () => {
     if (!analysis.stage1) return
@@ -145,6 +148,10 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
             >
               <FileText className="h-4 w-4" />
               Stage 2 - Exhaustive Expansion
+            </TabsTrigger>
+            <TabsTrigger value="risks" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Risk Assessment
             </TabsTrigger>
           </TabsList>
 
@@ -294,6 +301,14 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
             </>
           )}
         </TabsContent>
+
+        <TabsContent value="risks" className="mt-6">
+          <RiskAssessment
+            projectId={project.id}
+            initialRisks={projectRisks}
+            onRisksUpdate={setProjectRisks}
+          />
+        </TabsContent>
       </Tabs>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
@@ -305,6 +320,7 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
             <li>• MoSCoW priority visualization</li>
             <li>• Coverage and ratio metrics</li>
             <li>• Interactive chart tooltips</li>
+            <li>• Risk assessment heat maps</li>
           </ul>
         </Card>
 
@@ -316,17 +332,19 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
             <li>• Capability Map (12-20 capabilities)</li>
             <li>• Traceability Matrix</li>
             <li>• Non-Functional Catalogue</li>
+            <li>• Automated risk extraction</li>
           </ul>
         </Card>
 
         <Card className="p-4">
-          <h4 className="font-medium text-foreground mb-2">Stage 2 Features</h4>
+          <h4 className="font-medium text-foreground mb-2">Risk Assessment</h4>
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• Exhaustive requirement expansion</li>
-            <li>• Auto-paging for large datasets</li>
-            <li>• Advanced deduplication</li>
-            <li>• Full traceability coverage</li>
-            <li>• Export-grade documentation</li>
+            <li>• Interactive risk heat map</li>
+            <li>• 5x5 probability/impact scoring</li>
+            <li>• Risk categorization & tracking</li>
+            <li>• Mitigation action planning</li>
+            <li>• Status monitoring & analytics</li>
+            <li>• Export capabilities</li>
           </ul>
         </Card>
       </div>

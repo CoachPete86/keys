@@ -1,24 +1,35 @@
-# Visual Mapping System Enhancement - PRD
+# KRCM Analysis Tool with Risk Assessment Enhancement - PRD
 
 ## Core Purpose & Success
-- **Mission Statement**: Enhance the KRCM Analysis Tool with an interactive visual mapping system that displays requirement-capability traceability through multiple visualization formats and exports beautiful HTML reports.
-- **Success Indicators**: Users can easily understand requirement-capability relationships, identify coverage gaps, and export professional reports suitable for stakeholder presentation.
-- **Experience Qualities**: Interactive, Insightful, Professional
+- **Mission Statement**: Enhance the KRCM Analysis Tool with comprehensive risk assessment scoring and heat map visualization, providing enterprise-grade business analysis capabilities with integrated risk management.
+- **Success Indicators**: Users can efficiently perform KRCM analysis, identify and assess project risks through interactive heat maps, and generate complete risk-aware business analysis reports.
+- **Experience Qualities**: Comprehensive, Interactive, Professional
 
 ## Project Classification & Approach
-- **Complexity Level**: Light Application (extending existing functionality with advanced visualizations)
-- **Primary User Activity**: Analyzing and exploring requirement-capability relationships through interactive visual interfaces
+- **Complexity Level**: Complex Application (advanced functionality with multiple integrated analysis tools)
+- **Primary User Activity**: Creating comprehensive business analysis with integrated risk assessment, visual mapping, and stakeholder reporting
 
 ## Thought Process for Feature Selection
-- **Core Problem Analysis**: Business analysts need visual ways to understand and communicate requirement-capability traceability and coverage gaps in their KRCM analyses.
-- **User Context**: After generating KRCM analysis, users want to explore relationships, identify gaps, and create presentation-ready reports for stakeholders.
-- **Critical Path**: Input business idea → Generate KRCM analysis → Explore visual mappings → Export professional report
+- **Core Problem Analysis**: Business analysts need integrated tools that combine KRCM methodology with risk assessment capabilities and visual communication tools for complete project analysis.
+- **User Context**: Enterprise teams performing business analysis need to identify requirements, assess risks, visualize relationships, and communicate findings to stakeholders with varying technical backgrounds.
+- **Critical Path**: Input business idea → Generate KRCM analysis → Assess and score risks → Explore visual mappings → Export comprehensive reports
 - **Key Moments**: 
-  1. First time viewing the visual network map showing all connections
-  2. Discovering coverage gaps through the gap analysis dashboard
-  3. Exporting a beautifully formatted HTML report for stakeholder sharing
+  1. Streamlined business input with intelligent defaults
+  2. Real-time risk extraction and scoring with interactive heat map
+  3. Visual exploration of requirement-capability relationships
+  4. Export of professional risk-aware analysis reports
 
 ## Essential Features
+
+### Risk Assessment & Heat Map Visualization
+- **What it does**: Provides 5x5 probability/impact risk scoring with interactive heat map visualization, automated risk extraction from analysis content, and comprehensive risk tracking
+- **Why it matters**: Enables proactive risk management integrated with business analysis, helping teams identify and mitigate potential issues early
+- **Success criteria**: Users can score risks, visualize risk distribution, track mitigation actions, and export risk registers
+
+### Automated Risk Extraction
+- **What it does**: Automatically identifies potential risks from business constraints, requirements analysis, and user input
+- **Why it matters**: Saves time and ensures comprehensive risk identification by scanning analysis content for risk indicators
+- **Success criteria**: System identifies relevant risks from project inputs and presents them for user review and scoring
 
 ### Interactive Visual Network Map
 - **What it does**: Displays requirements and capabilities as connected nodes with relationship links
