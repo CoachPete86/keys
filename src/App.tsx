@@ -3,10 +3,13 @@ import { useKV } from '@github/spark/hooks'
 import { BusinessInputForm } from './components/BusinessInputForm'
 import { AnalysisResults } from './components/AnalysisResults'
 import { ProjectManager } from './components/ProjectManager'
+import { ProjectTimeline, TimelinePhase } from './components/ProjectTimeline'
+import { RiskAssessment, RiskItem } from './components/RiskAssessment'
+import { IntegratedDashboard } from './components/IntegratedDashboard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
 import { Card } from './components/ui/card'
 import { Toaster } from './components/ui/sonner'
-import { Database, FileText, Settings } from '@phosphor-icons/react'
+import { Database, FileText, Settings, Calendar, AlertTriangle, BarChart3 } from '@phosphor-icons/react'
 
 export interface BusinessInput {
   id: string
@@ -27,14 +30,21 @@ export interface AnalysisData {
   status: 'pending' | 'stage1-complete' | 'stage2-complete' | 'error'
 }
 
+export interface ProjectData {
+  timeline: TimelinePhase[]
+  risks: RiskItem[]
+}
+
 function App() {
   const [projects, setProjects] = useKV<Record<string, BusinessInput>>('krcm-projects', {})
   const [analyses, setAnalyses] = useKV<Record<string, AnalysisData>>('krcm-analyses', {})
+  const [projectData, setProjectData] = useKV<Record<string, ProjectData>>('krcm-project-data', {})
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('input')
 
   const currentProject = currentProjectId ? projects[currentProjectId] : null
   const currentAnalysis = currentProjectId ? analyses[currentProjectId] : null
+  const currentProjectTimeline = currentProjectId ? projectData[currentProjectId] : null
 
   const saveProject = (project: BusinessInput) => {
     setProjects(prev => ({
@@ -48,6 +58,18 @@ function App() {
     setAnalyses(prev => ({
       ...prev,
       [projectId]: analysis
+    }))
+  }
+
+  const updateProjectData = (projectId: string, data: Partial<ProjectData>) => {
+    setProjectData(prev => ({
+      ...prev,
+      [projectId]: {
+        timeline: [],
+        risks: [],
+        ...prev[projectId],
+        ...data
+      }
     }))
   }
 
@@ -66,6 +88,11 @@ function App() {
       const newAnalyses = { ...prev }
       delete newAnalyses[projectId]
       return newAnalyses
+    })
+    setProjectData(prev => {
+      const newProjectData = { ...prev }
+      delete newProjectData[projectId]
+      return newProjectData
     })
     if (currentProjectId === projectId) {
       setCurrentProjectId(null)
@@ -91,7 +118,7 @@ function App() {
 
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <Database className="h-4 w-4" />
               Projects
@@ -100,9 +127,21 @@ function App() {
               <Settings className="h-4 w-4" />
               Analysis Input
             </TabsTrigger>
+            <TabsTrigger value="dashboard" className="flex items-center gap-2" disabled={!currentProject}>
+              <BarChart3 className="h-4 w-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="timeline" className="flex items-center gap-2" disabled={!currentProject}>
+              <Calendar className="h-4 w-4" />
+              Timeline
+            </TabsTrigger>
+            <TabsTrigger value="risks" className="flex items-center gap-2" disabled={!currentProject}>
+              <AlertTriangle className="h-4 w-4" />
+              Risk Assessment
+            </TabsTrigger>
             <TabsTrigger value="results" className="flex items-center gap-2" disabled={!currentAnalysis}>
               <FileText className="h-4 w-4" />
-              Results
+              Analysis Results
             </TabsTrigger>
           </TabsList>
 
@@ -125,8 +164,44 @@ function App() {
                 onSaveProject={saveProject}
                 onUpdateAnalysis={updateAnalysis}
                 onSwitchToResults={() => setActiveTab('results')}
+                onSwitchToDashboard={() => setActiveTab('dashboard')}
               />
             </Card>
+          </TabsContent>
+
+          <TabsContent value="dashboard" className="mt-6">
+            {currentProject && (
+              <IntegratedDashboard
+                projectName={currentProject.name}
+                phases={currentProjectTimeline?.timeline || []}
+                risks={currentProjectTimeline?.risks || []}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="timeline" className="mt-6">
+            {currentProject && (
+              <Card className="p-6">
+                <ProjectTimeline
+                  projectId={currentProject.id}
+                  phases={currentProjectTimeline?.timeline || []}
+                  risks={currentProjectTimeline?.risks || []}
+                  onPhasesUpdate={(phases) => updateProjectData(currentProject.id, { timeline: phases })}
+                />
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="risks" className="mt-6">
+            {currentProject && (
+              <Card className="p-6">
+                <RiskAssessment
+                  projectId={currentProject.id}
+                  initialRisks={currentProjectTimeline?.risks || []}
+                  onRisksUpdate={(risks) => updateProjectData(currentProject.id, { risks })}
+                />
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="results" className="mt-6">

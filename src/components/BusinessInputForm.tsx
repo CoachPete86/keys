@@ -16,6 +16,7 @@ interface BusinessInputFormProps {
   onSaveProject: (project: BusinessInput) => void
   onUpdateAnalysis: (projectId: string, analysis: AnalysisData) => void
   onSwitchToResults: () => void
+  onSwitchToDashboard?: () => void
 }
 
 export function BusinessInputForm({ 
@@ -23,7 +24,8 @@ export function BusinessInputForm({
   analysis, 
   onSaveProject, 
   onUpdateAnalysis, 
-  onSwitchToResults 
+  onSwitchToResults,
+  onSwitchToDashboard
 }: BusinessInputFormProps) {
   const [formData, setFormData] = useState({
     name: project?.name || '',
@@ -400,6 +402,17 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
           <Save className="h-4 w-4" />
           Save Project
         </Button>
+
+        {project && onSwitchToDashboard && (
+          <Button 
+            onClick={onSwitchToDashboard}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <ArrowRight className="h-4 w-4" />
+            Go to Dashboard
+          </Button>
+        )}
 
         <Button 
           onClick={runStage1Analysis} 

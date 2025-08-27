@@ -1,30 +1,52 @@
-# KRCM Analysis Tool with Risk Assessment Enhancement - PRD
+# KRCM Analysis Tool with Integrated Risk Assessment and Project Timeline - PRD
 
 ## Core Purpose & Success
-- **Mission Statement**: Enhance the KRCM Analysis Tool with comprehensive risk assessment scoring and heat map visualization, providing enterprise-grade business analysis capabilities with integrated risk management.
-- **Success Indicators**: Users can efficiently perform KRCM analysis, identify and assess project risks through interactive heat maps, and generate complete risk-aware business analysis reports.
-- **Experience Qualities**: Comprehensive, Interactive, Professional
+- **Mission Statement**: Provide enterprise-grade business analysis capabilities through integrated KRCM methodology, comprehensive risk assessment, project timeline management, and resource planning in a unified platform.
+- **Success Indicators**: Users can efficiently perform complete project lifecycle management from business analysis through risk-aware timeline planning and resource allocation with real-time health monitoring.
+- **Experience Qualities**: Comprehensive, Integrated, Intelligent
 
 ## Project Classification & Approach
-- **Complexity Level**: Complex Application (advanced functionality with multiple integrated analysis tools)
-- **Primary User Activity**: Creating comprehensive business analysis with integrated risk assessment, visual mapping, and stakeholder reporting
+- **Complexity Level**: Complex Application (advanced functionality with multiple integrated analysis and planning tools)
+- **Primary User Activity**: Creating comprehensive business analysis with integrated risk assessment, timeline planning, resource allocation, and stakeholder reporting
 
 ## Thought Process for Feature Selection
-- **Core Problem Analysis**: Business analysts need integrated tools that combine KRCM methodology with risk assessment capabilities and visual communication tools for complete project analysis.
-- **User Context**: Enterprise teams performing business analysis need to identify requirements, assess risks, visualize relationships, and communicate findings to stakeholders with varying technical backgrounds.
-- **Critical Path**: Input business idea → Generate KRCM analysis → Assess and score risks → Explore visual mappings → Export comprehensive reports
+- **Core Problem Analysis**: Business analysts and project managers need integrated tools that combine KRCM methodology with risk assessment capabilities, project timeline management, resource planning, and visual communication tools for complete project lifecycle management.
+- **User Context**: Enterprise teams performing business analysis need to identify requirements, assess risks, plan timelines, allocate resources, visualize relationships, and monitor project health with integrated risk indicators.
+- **Critical Path**: Input business idea → Generate KRCM analysis → Assess and score risks → Plan project timeline → Allocate resources → Monitor integrated dashboard → Export comprehensive reports
 - **Key Moments**: 
   1. Streamlined business input with intelligent defaults
   2. Real-time risk extraction and scoring with interactive heat map
-  3. Visual exploration of requirement-capability relationships
-  4. Export of professional risk-aware analysis reports
+  3. Integrated timeline planning with risk indicators
+  4. Resource allocation with conflict detection
+  5. Unified dashboard with health scoring
+  6. Export of professional risk-aware analysis reports
 
 ## Essential Features
 
+### Integrated Project Dashboard
+- **What it does**: Provides unified view of project health, timeline progress, risk exposure, resource utilization, and milestone tracking with intelligent health scoring
+- **Why it matters**: Enables executives and project managers to quickly assess project status and identify issues requiring attention
+- **Success criteria**: Real-time health score calculation, visual progress indicators, alert system for critical issues
+
+### Risk-Timeline Integration
+- **What it does**: Connects risk assessment with project phases, showing risk-adjusted timeline confidence and phase-specific risk impacts
+- **Why it matters**: Provides realistic project delivery estimates by considering risk impact on timeline deliverability
+- **Success criteria**: Risk-adjusted confidence scores, phase-specific risk indicators, timeline risk visualization
+
+### Project Timeline Management
+- **What it does**: Comprehensive project phase planning with dependencies, milestones, deliverables, and progress tracking
+- **Why it matters**: Enables structured project planning with clear accountability and progress monitoring
+- **Success criteria**: Gantt chart visualization, milestone tracking, dependency management, progress monitoring
+
+### Resource Planning & Allocation
+- **What it does**: Resource allocation across project phases with cost tracking, utilization monitoring, and conflict detection
+- **Why it matters**: Ensures optimal resource utilization and prevents overallocation while tracking project costs
+- **Success criteria**: Resource utilization tracking, conflict detection, cost analysis, allocation optimization
+
 ### Risk Assessment & Heat Map Visualization
 - **What it does**: Provides 5x5 probability/impact risk scoring with interactive heat map visualization, automated risk extraction from analysis content, and comprehensive risk tracking
-- **Why it matters**: Enables proactive risk management integrated with business analysis, helping teams identify and mitigate potential issues early
-- **Success criteria**: Users can score risks, visualize risk distribution, track mitigation actions, and export risk registers
+- **Why it matters**: Enables proactive risk management integrated with business analysis and timeline planning
+- **Success criteria**: Users can score risks, visualize risk distribution, track mitigation actions, and see risk impact on timelines
 
 ### Automated Risk Extraction
 - **What it does**: Automatically identifies potential risks from business constraints, requirements analysis, and user input
