@@ -298,6 +298,17 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
         <Card className="p-4">
+          <h4 className="font-medium text-foreground mb-2">Visual Analytics</h4>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            <li>• Requirements distribution charts</li>
+            <li>• Capability breakdown analysis</li>
+            <li>• MoSCoW priority visualization</li>
+            <li>• Coverage and ratio metrics</li>
+            <li>• Interactive chart tooltips</li>
+          </ul>
+        </Card>
+
+        <Card className="p-4">
           <h4 className="font-medium text-foreground mb-2">Stage 1 Features</h4>
           <ul className="text-sm text-muted-foreground space-y-1">
             <li>• Executive Snapshot</li>
@@ -316,17 +327,6 @@ Generate complete expanded output with all sections A→J, maintaining UK Englis
             <li>• Advanced deduplication</li>
             <li>• Full traceability coverage</li>
             <li>• Export-grade documentation</li>
-          </ul>
-        </Card>
-
-        <Card className="p-4">
-          <h4 className="font-medium text-foreground mb-2">Output Standards</h4>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• UK English compliance</li>
-            <li>• MoSCoW prioritisation</li>
-            <li>• Structured ID schemas</li>
-            <li>• KRCM methodology adherence</li>
-            <li>• JSON export compatibility</li>
           </ul>
         </Card>
       </div>

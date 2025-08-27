@@ -21,9 +21,11 @@ import {
   TreeStructure,
   Database,
   Settings,
-  ChartLineUp
+  ChartLineUp,
+  ChartBar
 } from '@phosphor-icons/react'
 import { BusinessInput, AnalysisData } from '../App'
+import { AnalysisCharts } from './AnalysisCharts'
 import { toast } from 'sonner'
 
 interface AnalysisViewerProps {
@@ -59,7 +61,7 @@ interface Capability {
 }
 
 export function AnalysisViewer({ project, analysis, content, stage }: AnalysisViewerProps) {
-  const [activeSection, setActiveSection] = useState('executive')
+  const [activeSection, setActiveSection] = useState('charts')
 
   const parsedSections = useMemo((): ParsedSection[] => {
     const sections: ParsedSection[] = []
@@ -67,6 +69,7 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
     // Split content into sections based on common KRCM headers
     const sectionPatterns = [
       { id: 'executive', title: 'Executive Snapshot', type: 'executive' as const, icon: Target },
+      { id: 'charts', title: 'Analysis Charts', type: 'requirements' as const, icon: ChartBar },
       { id: 'decomposition', title: 'Decomposition', type: 'requirements' as const, icon: TreeStructure },
       { id: 'requirements', title: 'Requirements Register', type: 'requirements' as const, icon: FileText },
       { id: 'capabilities', title: 'Capability Map', type: 'capabilities' as const, icon: Layers },
@@ -79,6 +82,18 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
     ]
 
     sectionPatterns.forEach(pattern => {
+      // Always add charts section (it's computed, not parsed)
+      if (pattern.id === 'charts') {
+        sections.push({
+          id: pattern.id,
+          title: pattern.title,
+          content: '', // Charts are rendered programmatically
+          type: pattern.type,
+          icon: pattern.icon
+        })
+        return
+      }
+
       const regex = new RegExp(`##?\\s*${pattern.title}([\\s\\S]*?)(?=##?\\s*(?:${sectionPatterns.map(p => p.title).join('|')})|$)`, 'i')
       const match = content.match(regex)
       
@@ -96,6 +111,7 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
     return sections
   }, [content])
 
+  // Enhanced requirements parsing to handle various table formats
   const requirements = useMemo((): Requirement[] => {
     const reqSection = parsedSections.find(s => s.id === 'requirements')
     if (!reqSection) return []
@@ -104,9 +120,21 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
     const lines = reqSection.content.split('\n')
     
     lines.forEach(line => {
-      // Parse requirement table rows
-      const match = line.match(/\|\s*([A-Z]{2,3}-\d+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*(Must|Should|Could|Won't)\s*\|/)
-      if (match) {
+      // Parse requirement table rows - handle multiple table formats
+      let match = line.match(/\|\s*([A-Z]{2,3}-\d+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*(Must|Should|Could|Won't)\s*\|/)
+      
+      // Alternative format without rationale column
+      if (!match) {
+        match = line.match(/\|\s*([A-Z]{2,3}-\d+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*(Must|Should|Could|Won't)\s*\|/)
+        if (match) {
+          requirements.push({
+            id: match[1].trim(),
+            requirement: match[2].trim(),
+            type: match[3].trim() as 'CR' | 'FR' | 'NFR',
+            priority: match[4].trim() as 'Must' | 'Should' | 'Could' | 'Won\'t'
+          })
+        }
+      } else {
         requirements.push({
           id: match[1].trim(),
           requirement: match[2].trim(),
@@ -115,11 +143,23 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
           priority: match[5].trim() as 'Must' | 'Should' | 'Could' | 'Won\'t'
         })
       }
+
+      // Also try to parse simple bullet points with priorities
+      const bulletMatch = line.match(/^[•\-\*]\s*([^(]+)\(([A-Z]{2,3})\)\s*-\s*(Must|Should|Could|Won't)/)
+      if (bulletMatch && !match) {
+        requirements.push({
+          id: `AUTO-${requirements.length + 1}`,
+          requirement: bulletMatch[1].trim(),
+          type: bulletMatch[2].trim() as 'CR' | 'FR' | 'NFR',
+          priority: bulletMatch[3].trim() as 'Must' | 'Should' | 'Could' | 'Won\'t'
+        })
+      }
     })
 
     return requirements
   }, [parsedSections])
 
+  // Enhanced capabilities parsing
   const capabilities = useMemo((): Capability[] => {
     const capSection = parsedSections.find(s => s.id === 'capabilities')
     if (!capSection) return []
@@ -128,14 +168,36 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
     const lines = capSection.content.split('\n')
     
     lines.forEach(line => {
-      // Parse capability table rows
-      const match = line.match(/\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]*)\s*\|\s*(Core|Enabler|Support|Quality)\s*\|/)
-      if (match) {
+      // Parse capability table rows - handle multiple formats
+      let match = line.match(/\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]*)\s*\|\s*(Core|Enabler|Support|Quality)\s*\|/)
+      
+      // Alternative format
+      if (!match) {
+        match = line.match(/\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*(Core|Enabler|Support|Quality)\s*\|/)
+        if (match) {
+          capabilities.push({
+            id: match[1].trim(),
+            name: match[2].trim(),
+            type: match[3].trim() as 'Core' | 'Enabler' | 'Support' | 'Quality'
+          })
+        }
+      } else {
         capabilities.push({
           id: match[1].trim(),
           name: match[2].trim(),
           type: match[4].trim() as 'Core' | 'Enabler' | 'Support' | 'Quality',
           description: match[3]?.trim()
+        })
+      }
+
+      // Also try to parse simple bullet points
+      const bulletMatch = line.match(/^[•\-\*]\s*([^(]+)\(([^)]+)\)\s*-\s*(Core|Enabler|Support|Quality)/)
+      if (bulletMatch && !match) {
+        capabilities.push({
+          id: `CAP-${capabilities.length + 1}`,
+          name: bulletMatch[1].trim(),
+          type: bulletMatch[3].trim() as 'Core' | 'Enabler' | 'Support' | 'Quality',
+          description: bulletMatch[2].trim()
         })
       }
     })
@@ -421,9 +483,16 @@ export function AnalysisViewer({ project, analysis, content, stage }: AnalysisVi
             </div>
 
             {activeSection === 'executive' && renderExecutiveSnapshot(activeSection_data)}
+            {activeSection === 'charts' && (
+              <AnalysisCharts 
+                requirements={requirements} 
+                capabilities={capabilities} 
+                stage={stage}
+              />
+            )}
             {activeSection === 'requirements' && renderRequirements()}
             {activeSection === 'capabilities' && renderCapabilities()}
-            {!['executive', 'requirements', 'capabilities'].includes(activeSection) && 
+            {!['executive', 'charts', 'requirements', 'capabilities'].includes(activeSection) && 
               renderGenericSection(activeSection_data)}
           </div>
         )}
